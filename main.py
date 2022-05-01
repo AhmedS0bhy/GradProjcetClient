@@ -13,7 +13,7 @@ from modules.software import Software
 from modules.sysmon_event import Sysmon_event
 from modules.user import User
 from modules.user_group import User_group
-from json import dumps
+from json import dumps, loads
 from subprocess import run, PIPE
 from datetime import datetime
 from requests import post
@@ -383,12 +383,21 @@ def handle_data(str_data,data_type,hostid):
     return data_obj_list
 
 def main():
-
+    ip = "http://localhost:5000"
     hostslist = []
     #----------------- Host Data ----------------------------------#
 
     host_obj = Host(get_host_info(),get_cpu_info(),get_disk_info(),get_win_sec_center(),get_uptime(),get_os_info())
-    print(dumps(host_obj.get_dic(),indent=4))
+    # send data to API
+    r = post(ip + "/api/v1/hosts/",json=host_obj.get_dic())
+    print(f"[{datetime.now()}] Host data response code: {r.status_code}")
+    if r.status_code == 201:
+        hostid = r.text['data']['data']['_id']
+        print(f"[{datetime.now()}] Host created successfully with ID:{hostid}")
+    else:
+        print(f"[{datetime.now()}] ERROR!, Response data:")
+        print(dumps(loads(r.text),indent=4))
+
 
 
 if __name__ == "__main__":
