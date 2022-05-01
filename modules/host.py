@@ -278,7 +278,7 @@ class Host:
     def get_dic(self):
         new_dic = {
             "uuid": self.uuid,
-            "host_name": self.host_name,
+            "hostName": self.host_name,
             "memory": self.physical_memory,
             "cpu_info": self.get_cpu_info(),
             "disk_info": self.get_disk_info(),
