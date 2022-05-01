@@ -1,0 +1,34 @@
+{
+    "hosts": [
+        "TESTHOSTID"
+    ],
+    "data": [
+        {
+            "hostid": "TESTHOSTID",
+            "pid": "0",
+            "name": "AJRouter",
+            "description": "Routes AllJoyn messages for the local AllJoyn clients. If this service is stopped the AllJoyn clients that do not have their own bundled routers will be unable to run.",
+            "display_name": "AllJoyn Router Service",
+            "status": "STOPPED",
+            "user_account": "NT AUTHORITY/LocalService"
+        },
+        {
+            "hostid": "TESTHOSTID",
+            "pid": "0",
+            "name": "ALG",
+            "description": "Provides support for 3rd party protocol plug-ins for Internet Connection Sharing",
+            "display_name": "Application Layer Gateway Service",
+            "status": "STOPPED",
+            "user_account": "NT AUTHORITY/LocalService"
+        },
+        {
+            "hostid": "TESTHOSTID",
+            "pid": "0",
+            "name": "AppIDSvc",
+            "description": "Determines and verifies the identity of an application. Disabling this service will prevent AppLocker from being enforced.",
+            "display_name": "Application Identity",
+            "status": "STOPPED",
+            "user_account": "NT Authority/LocalService"
+        }
+    ]
+}
