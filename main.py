@@ -94,7 +94,8 @@ def get_services():
         stdout=PIPE)
     return data.stdout.decode()
 
-def get_sec_events():
+def get_events(event_source,aftertime):
+    command = '&{Get-WinEvent -LogName "' + event_source +'" -MaxEvents 30  |where timecreated -gt "'+aftertime+'"  | select id,message | ConvertTo-Json}'
     data = run([
         "Powershell.exe",
         "-ExecutionPolicy", "Bypass",
@@ -106,13 +107,6 @@ def get_sec_events():
         stdout=PIPE)
     str_data = data.stdout.decode('ascii')
     return str_data
-
-#def get_app_events():
-#    data = run([
-#        "&{&osqueryi.exe --json 'SELECT channel,datetime,level,eventid,data,pid FROM windows_eventlog WHERE channel=' }"],
-#        stdout=PIPE)
-#    str_data = data.stdout.decode('ascii')
-#    return str_data
 
 
 
@@ -380,6 +374,8 @@ def handle_data(str_data,data_type,hostid):
     return data_obj_list
 
 def main():
+    time = datetime.now()
+    dt_time = time.strftime("%d/%m/%Y %H:%M:%S")
     hostid= "626ed447b27b10b8ce034271"
 
     ip = "http://localhost:5000"
@@ -599,6 +595,43 @@ def main():
             }
             r = post(ip + "/api/v1/usersGroups/", json=groups_members_data)
             print(f"[{datetime.now()}] Local groups members data response code: {r.status_code}")
+            if r.status_code != 200:
+                print(f"[{datetime.now()}] ERROR!, Response data:")
+                print(dumps(loads(r.text), indent=4))
+
+            #-------- Device Events---------#
+
+            events_source_list = ["Apllication","System","Security"]
+
+            for event_source in events_source_list:
+                event_obj_list = handle_data(get_events(event_source,dt_time),"event",hostid)
+                event_data_list = []
+                for i in event_obj_list:
+                    event_data_list.append(i.get_dic())
+
+                events_data = {
+                    "hosts": hostslist,
+                    "data":event_data_list
+                }
+                r = post(ip + "/api/v1/events/", json=events_data)
+                print(f"[{datetime.now()}] {event_source}  data response code: {r.status_code}")
+                if r.status_code != 200:
+                    print(f"[{datetime.now()}] ERROR!, Response data:")
+                    print(dumps(loads(r.text), indent=4))
+
+            #---------- sysmon events--------#
+
+            sysmon_obj_list = handle_sysmon(get_sysmon_events(1,dt_time))
+            sysmon_data_list = []
+            for i in sysmon_obj_list:
+                sysmon_data_list.append(i.get_dic())
+
+            sysmon_data = {
+                "hosts": hostslist,
+                "data": sysmon_data_list
+            }
+            r = post(ip + "/api/v1/sysmon/", json=sysmon_data)
+            print(f"[{datetime.now()}] sysmon logs response code: {r.status_code}")
             if r.status_code != 200:
                 print(f"[{datetime.now()}] ERROR!, Response data:")
                 print(dumps(loads(r.text), indent=4))
