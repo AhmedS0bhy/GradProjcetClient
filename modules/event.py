@@ -4,63 +4,64 @@ class Event:
     def __init__(self,json_event,hostid):
         dic_event = loads(json_event)
         self.hostid = hostid
-        self.channel = dic_event['channel']
-        self.data = dic_event['data']
-        self.datetime = dic_event['datetime']
-        self.eventid = dic_event['eventid']
+        self.logName = dic_event['logName']
+        self.message = dic_event['message']
+        self.TimeCreated = dic_event['TimeCreated']
+        self.id = dic_event['id']
         self.level = dic_event['level']
-        self.pid = dic_event['pid']
-
+        self.processId = dic_event['processId']
+        self.machineName = dic_event['machineName']
     def get_hostid(self):
         return self.hostid
 
-    def get_channel(self):
-        return self.channel
+    def get_logName(self):
+        return self.logName
 
-    def get_data(self):
-        return self.data
+    def get_message(self):
+        return self.message
 
-    def get_datetime(self):
-        return self.datetime
+    def get_TimeCreated(self):
+        return self.TimeCreated
 
-    def get_eventid(self):
-        return self.eventid
+    def get_id(self):
+        return self.id
 
     def get_level(self):
         return self.level
 
-    def get_pid(self):
-        return self.pid
+    def get_processId(self):
+        return self.processId
 
     def set_hostid(self,hostid):
         self.hostid = hostid
 
-    def set_channel(self,channel):
-        self.channel = channel
+    def set_logName(self,logName):
+        self.logName = logName
 
-    def set_data(self,data):
-        self.data = data
+    def set_message(self,message):
+        self.message = message
 
-    def set_datetime(self,datetime):
-        self.datatime = datetime
+    def set_TimeCreated(self,TimeCreated):
+        self.messagetime = TimeCreated
 
-    def set_eventid(self,eventid):
-        self.eventid = eventid
+    def set_id(self,id):
+        self.id = id
 
     def set_level(self,level):
         self.level =level
 
-    def set_pid(self,pid):
-        self.pid = pid
+    def set_processId(self,processId):
+        self.processId = processId
 
     def get_dic(self):
         dic_event = {
-            'hostid': self.hostid,
-            'channel': self.channel,
-            'data': self.data,
-            'datetime': self.datetime,
-            'eventid': self.eventid,
+            'id': self.id,
+            'machineName': self.machineName,
+            'TimeCreated': self.TimeCreated,
+            'logName': self.logName,
             'level': self.level,
-            'pid': self.pid,
+            'processId': self.processId,
+            'message': self.message,
+            'hostid': self.hostid,
         }
         return dic_event
