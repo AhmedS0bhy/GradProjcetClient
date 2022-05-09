@@ -1,3 +1,5 @@
+import requests
+
 from modules.process import Process
 from modules.service import Service
 from modules.arp import Arp
@@ -16,7 +18,7 @@ from modules.user_group import User_group
 from json import dumps, loads
 from subprocess import run, PIPE
 from datetime import datetime, timedelta
-from requests import post
+from requests import post,delete
 
 
 def get_proceesses():
@@ -653,7 +655,10 @@ def main():
             print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Application  data response code: {r.status_code}")
             if r.status_code != 200:
                 print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-                print(dumps(loads(r.text), indent=4))
+                print(dumps(loads(r.text), indent=1))
+                print("-----------------------------")
+                print("request sample:")
+                print(dumps(app_event_data_list[1],indent=1))
 
         # -------- System Events---------#
 
@@ -709,7 +714,6 @@ def main():
             "hosts": hostslist,
             "data": sysmon_data_list
         }
-        print(dumps(sysmon_data, indent=4))
 
         r = post(ip + "/api/v1/sysmon/", json=sysmon_data)
         print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] sysmon logs response code: {r.status_code}")
@@ -718,6 +722,10 @@ def main():
             print(dumps(loads(r.text), indent=4))
         break
 
+    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Clossing the client.....")
+    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Cleaning the database....")
+    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Remove the host with ID:{hostid}")
+    r = delete(ip + "/api/v1/hosts/" + hostid)
 
 if __name__ == "__main__":
     main()
