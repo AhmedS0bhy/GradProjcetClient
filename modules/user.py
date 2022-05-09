@@ -6,8 +6,10 @@ class User:
         self.username = dic_user['username']
         self.uid = dic_user['uid']
         self.gid = dic_user['gid']
-        self.description = dic_user['description']
-
+        if dic_user['description'] !='':
+            self.description = dic_user['description']
+        else:
+            self.description = "None"
     def set_hostid(self,hostid):
         self.hostid = hostid
 

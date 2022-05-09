@@ -5,7 +5,10 @@ class Process:
         self.hostid = hostid
         self.name = dic_process['name']
         self.parent = dic_process['parent']
-        self.path = dic_process['path']
+        if dic_process['path'] != "":
+            self.path = dic_process['path']
+        else:
+            self.path = "None"
         self.uid = dic_process['uid']
         self.pid = dic_process['pid']
 

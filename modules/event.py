@@ -1,16 +1,20 @@
 from json import loads
-
+import datetime
 class Event:
     def __init__(self,json_event,hostid):
         dic_event = loads(json_event)
         self.hostid = hostid
-        self.logName = dic_event['logName']
-        self.message = dic_event['message']
-        self.TimeCreated = dic_event['TimeCreated']
-        self.id = dic_event['id']
-        self.level = dic_event['level']
-        self.processId = dic_event['processId']
-        self.machineName = dic_event['machineName']
+        self.logName = dic_event['LogName']
+        self.message = dic_event['Message']
+        time = dic_event['TimeCreated']
+        time = time.replace("/Date(","")
+        time = time.replace(")/","")
+        dt = datetime.datetime.fromtimestamp(int(time)/1000,datetime.timezone(datetime.timedelta(hours=2)))
+        self.TimeCreated = dt.strftime('%d/%m/%Y %H:%M:%S')
+        self.id = dic_event['Id']
+        self.level = dic_event['Level']
+        self.processId = dic_event['ProcessId']
+        self.machineName = dic_event['MachineName']
     def get_hostid(self):
         return self.hostid
 

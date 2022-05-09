@@ -5,7 +5,10 @@ class Security_patch:
         dic_patch  = loads(json_patch)
         self.hostid = hostid
         self.csname = dic_patch['csname']
-        self.caption = dic_patch['caption']
+        if dic_patch['caption'] != '':
+            self.caption = dic_patch['caption']
+        else:
+            self.caption = 'None'
         self.description = dic_patch['description']
         self.hotfix_id = dic_patch['hotfix_id']
 

@@ -5,7 +5,10 @@ class Route:
         self.hostid = hostid
         self.source = dic_route['source']
         self.netmask = dic_route['netmask']
-        self.interface = dic_route['interface']
+        if dic_route['interface'] != '':
+            self.interface = dic_route['interface']
+        else:
+            self.interface = "None"
         self.gateway = dic_route['gateway']
         self.destination = dic_route['destination']
 

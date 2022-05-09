@@ -5,8 +5,14 @@ class Software:
         dic_software = loads(json_software)
         self.hostid = hostid
         #install_location, name, publisher, version,
-        self.name = dic_software['name']
-        self.publisher = dic_software['publisher']
+        if dic_software['name'] != '':
+            self.name = dic_software['name']
+        else:
+            self.name = 'None'
+        if dic_software['publisher'] != '':
+            self.publisher = dic_software['publisher']
+        else:
+            self.publisher = 'None'
         self.version = dic_software['version']
         self.install_location = dic_software['install_location']
 

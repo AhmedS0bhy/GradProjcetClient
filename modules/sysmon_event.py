@@ -3,38 +3,39 @@ class Sysmon_event:
     def __init__(self,event_data,hostid):
         event_Data_list = event_data.split("\r\n")
         list_of_values = []
-        for element in event_Data_list:
-            dic_tmp = element.split(": ")
-            list_of_values.append(dic_tmp[1])
+        tmp_id = event_Data_list[0].split(":")
+        list_of_values.append(tmp_id[1].replace(",",""))
 
-
+        message_List = event_Data_list[1].split("\\r\\n")
+        for message in message_List:
+            tmp = message.split(": ")
+            list_of_values.append(tmp[1])
         # assing the values to the object for event ID 1
         self.hostid = hostid
-        tmp_id = list_of_values[0].replace(",        Message","")
-        self.id = tmp_id.replace(" ","")
-        self.rule_name = list_of_values[1]
-        self.utctime = list_of_values[2]
-        self.process_guid = list_of_values[3]
-        self.process_id = list_of_values[4]
-        self.image = list_of_values[5]
-        self.file_version = list_of_values[6]
-        self.description = list_of_values[7]
-        self.product = list_of_values[8]
-        self.company = list_of_values[9]
-        self.original_file_name = list_of_values[10]
-        self.command_line = list_of_values[11]
-        self.current_directory = list_of_values[12]
-        self.user = list_of_values[13]
-        self.logon_guid = list_of_values[14]
-        self.logon_id = list_of_values[15]
-        self.terminal_session_id = list_of_values[16]
-        self.integrity_level = list_of_values[17]
-        self.hash = list_of_values[18].replace("MD5=","")
-        self.parent_process_guid = list_of_values[19]
-        self.parent_process_id = list_of_values[20]
-        self.parent_image = list_of_values[21]
-        self.parent_command_line = list_of_values[22]
-        self.parent_user = list_of_values[23].replace("    ","")
+        self.id = list_of_values[0].replace("  ","")
+        self.rule_name = list_of_values[2]
+        self.utctime = list_of_values[3]
+        self.process_guid = list_of_values[4]
+        self.process_id = list_of_values[5]
+        self.image = list_of_values[6].replace("\\\\","/")
+        self.file_version = list_of_values[7]
+        self.description = list_of_values[8]
+        self.product = list_of_values[9]
+        self.company = list_of_values[10]
+        self.original_file_name = list_of_values[11]
+        self.command_line = list_of_values[12].replace("\\\\","/")
+        self.current_directory = list_of_values[13].replace("\\\\","/")
+        self.user = list_of_values[14].replace("\\\\","/")
+        self.logon_guid = list_of_values[15]
+        self.logon_id = list_of_values[16]
+        self.terminal_session_id = list_of_values[17]
+        self.integrity_level = list_of_values[18]
+        self.hash = list_of_values[19].replace("MD5=","")
+        self.parent_process_guid = list_of_values[20]
+        self.parent_process_id = list_of_values[21]
+        self.parent_image = list_of_values[22].replace("\\\\","/")
+        self.parent_command_line = list_of_values[23].replace("\\\\","/")
+        self.parent_user = list_of_values[24].replace("\\\\","/")
 
     def get_hostid(self):
         return self.hostid
