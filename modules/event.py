@@ -5,12 +5,15 @@ class Event:
         dic_event = loads(json_event)
         self.hostid = hostid
         self.logName = dic_event['LogName']
-        self.message = dic_event['Message']
+        if dic_event['Message'] != "":
+            self.message = dic_event['Message']
+        else:
+            self.message = "None"
         time = dic_event['TimeCreated']
         time = time.replace("/Date(","")
         time = time.replace(")/","")
-        dt = datetime.datetime.fromtimestamp(int(time)/1000,datetime.timezone(datetime.timedelta(hours=2)))
-        self.TimeCreated = dt.strftime('%d/%m/%Y %H:%M:%S')
+        #dt = datetime.datetime.fromtimestamp(int(time)/1000,datetime.timezone(datetime.timedelta(hours=2)))
+        self.TimeCreated = time #dt.strftime('%d-%m-%Y %H:%M:%S')
         self.id = dic_event['Id']
         self.level = dic_event['Level']
         self.processId = dic_event['ProcessId']
