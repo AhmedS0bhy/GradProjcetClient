@@ -684,25 +684,31 @@ def main():
 
         # -------- Security Events---------#
 
-        security_events_data = get_events("Security", bf_time)
-        if len(security_events_data) <= 9:
-            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] No New Security log data to send")
-        else:
-            sec_event_obj_list = handle_events(security_events_data, hostid)
-            sec_event_data_list = []
-            for i in sec_event_obj_list:
-                sec_event_data_list.append(i.get_dic())
-            security_events_data = {
-                "hosts": hostslist,
-                "data": sec_event_data_list
-            }
+        try:
+            security_events_data = get_events("Security", bf_time)
+            if len(security_events_data) <= 9:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] No New Security log data to send")
+            else:
+                sec_event_obj_list = handle_events(security_events_data, hostid)
+                sec_event_data_list = []
+                for i in sec_event_obj_list:
+                    sec_event_data_list.append(i.get_dic())
+                security_events_data = {
+                    "hosts": hostslist,
+                    "data": sec_event_data_list
+                }
 
-            r = post(ip + "/api/v1/security/", json=security_events_data)
-            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Security  data response code: {r.status_code}")
-            if r.status_code != 200:
-                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-                print(dumps(loads(r.text), indent=4))
-
+                r = post(ip + "/api/v1/security/", json=security_events_data)
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Security  data response code: {r.status_code}")
+                if r.status_code != 200:
+                    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                    print(dumps(loads(r.text), indent=4))
+        except:
+            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR! , No Permission to get the Security Logs, run the client as administrator")
+            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Clossing the client.....")
+            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Cleaning the database....")
+            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Remove the host with ID:{hostid}")
+            r = delete(ip + "/api/v1/hosts/" + hostid)
         # ---------- sysmon events--------#
 
         sysmon_obj_list = handle_sysmon(get_sysmon_events(1, bf_time), hostid)
