@@ -8,7 +8,11 @@ class Service:
         self.description = dic_service['description']
         self.display_name = dic_service['display_name']
         self.status = dic_service['status']
-        self.user_account = dic_service['user_account']
+
+        if dic_service['user_account'] != '':
+            self.user_account = dic_service['user_account']
+        else:
+            self.user_account = 'None'
 
     def set_hostid(self,hostid):
         self.hostid = hostid
