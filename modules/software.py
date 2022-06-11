@@ -13,8 +13,17 @@ class Software:
             self.publisher = dic_software['publisher']
         else:
             self.publisher = 'None'
-        self.version = dic_software['version']
-        self.install_location = dic_software['install_location']
+
+        if dic_software['version'] != '':
+            self.version = dic_software['version']
+        else:
+            self.version = 'None'
+
+        if dic_software['install_location'] != '':
+            self.install_location = dic_software['install_location']
+        else:
+            self.install_location = 'None'
+
 
     def set_hostid(self,hostid):
         self.hostid =hostid
