@@ -1,5 +1,3 @@
-import requests
-
 from modules.process import Process
 from modules.service import Service
 from modules.arp import Arp
@@ -17,8 +15,8 @@ from modules.user import User
 from modules.user_group import User_group
 from json import dumps, loads
 from subprocess import run, PIPE
-from datetime import datetime, timedelta
-from requests import post,delete
+from datetime import datetime
+from requests import post, delete
 
 
 def get_proceesses():
@@ -408,284 +406,327 @@ def handle_data(str_data, data_type, hostid):
 
 def main():
     time = datetime.now()
-    bf_time = time + timedelta(minutes=-30)
-    bf_time = bf_time.strftime('%Y/%m/%d %H:%M')
 
     hostid = ""
 
-    ip = 'http://localhost:5000'
+    ip = 'http://192.168.1.7:5000'
 
     hostslist = []
+
     # ----------------- Host Data ----------------------------------#
 
     host_obj = Host(get_host_info(), get_cpu_info(), get_disk_info(), get_win_sec_center(), get_uptime(), get_os_info())
-    # send data to API
     r = post(ip + "/api/v1/hosts/", json=host_obj.get_dic())
     print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Host data response code: {r.status_code}")
-    if r.status_code == 201:
-        response = loads(r.text)
-        hostid = response['data']['data']['_id']
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Host created successfully with ID:{hostid}")
-    else:
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-        print(dumps(loads(r.text), indent=4))
+    response = loads(r.text)
+    hostid = response['data']['data']['_id']
+    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Host created successfully with ID:{hostid}")
 
-    # --------------proccesses-------------#
+    try:
+        while True:
+            # --------------proccesses-------------#
+            proc_obj_list = handle_data(get_proceesses(), "proccess", hostid)
+            proc_data_list = []
+            for i in proc_obj_list:
+                proc_data_list.append(i.get_dic())
 
-    proc_obj_list = handle_data(get_proceesses(), "proccess", hostid)
-    proc_data_list = []
-    for i in proc_obj_list:
-        proc_data_list.append(i.get_dic())
-
-    proc_data = {
-        "hosts": hostslist,
-        "data": proc_data_list
-    }
-    r = post(ip + "/api/v1/processes/", json=proc_data)
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Processes data response code: {r.status_code}")
-    if r.status_code != 200:
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-        print(dumps(loads(r.text), indent=4))
-
-    # ------------Services -----------------#
-
-    serv_obj_list = handle_data(get_services(), "services", hostid)
-    serv_data_list = []
-    for i in serv_obj_list:
-        serv_data_list.append(i.get_dic())
-
-    serv_data = {
-        "hosts": hostslist,
-        "data": serv_data_list
-    }
-    r = post(ip + "/api/v1/services/", json=serv_data)
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] services data response code: {r.status_code}")
-    if r.status_code != 200:
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-        print(dumps(loads(r.text), indent=4))
-
-    # ---------- arp cache -----------------#
-
-    arp_obj_list = handle_data(get_ARP(), "arp", hostid)
-    arp_data_list = []
-    for i in arp_obj_list:
-        arp_data_list.append(i.get_dic())
-
-    arp_data = {
-        "hosts": hostslist,
-        "data": arp_data_list
-    }
-    r = post(ip + "/api/v1/arp/", json=arp_data)
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ARP data response code: {r.status_code}")
-    if r.status_code != 200:
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-        print(dumps(loads(r.text), indent=4))
-
-    # --------------- groups ------------------#
-
-    groups_obj_list = handle_data(get_groups(), "group", hostid)
-    groups_data_list = []
-    for i in groups_obj_list:
-        groups_data_list.append(i.get_dic())
-
-    groups_data = {
-        "hosts": hostslist,
-        "data": groups_data_list
-    }
-    r = post(ip + "/api/v1/groups/", json=groups_data)
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] groups data response code: {r.status_code}")
-    if r.status_code != 200:
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-        print(dumps(loads(r.text), indent=4))
-
-    # ---------- interfaces ---------------#
-
-    interface_obj_list = handle_data(get_interfaces(), "interface", hostid)
-    interface_data_list = []
-    for i in interface_obj_list:
-        interface_data_list.append(i.get_dic())
-
-    interface_data = {
-        "hosts": hostslist,
-        "data": interface_data_list
-    }
-    r = post(ip + "/api/v1/interfaceAddresses/", json=interface_data)
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] interface data response code: {r.status_code}")
-    if r.status_code != 200:
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-        print(dumps(loads(r.text), indent=4))
-
-    # ---------- net connection ----------#
-
-    # port_connection_obj_list = handle_data(get_net_connects(), "port_connection", hostid)
-    # port_connection_data_list = []
-    # for i in port_connection_obj_list:
-    #     port_connection_data_list.append(i.get_dic())
-    #
-    # port_connection_data = {
-    #     "hosts": hostslist,
-    #     "data": port_connection_data_list
-    #     }
-    # r = post(ip + "/api/v1/listenPorts/", json=port_connection_data)
-    # print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] network connection data response code: {r.status_code}")
-    # if r.status_code != 200:
-    #     print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-    #     print(dumps(loads(r.text), indent=4))
-
-    # --------- route table -----------#
-
-    route_obj_list = handle_data(get_net_route(), "route", hostid)
-    route_data_list = []
-    for i in route_obj_list:
-        route_data_list.append(i.get_dic())
-
-    route_data = {
-        "hosts": hostslist,
-        "data": route_data_list
-    }
-    r = post(ip + "/api/v1/route/", json=route_data)
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] local route data response code: {r.status_code}")
-    if r.status_code != 200:
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-        print(dumps(loads(r.text), indent=4))
-
-    # ----------- Security Patches -------#
-
-    sec_patch_obj_list = handle_data(get_patches(), "security_patch", hostid)
-    sec_patch_data_list = []
-    for i in sec_patch_obj_list:
-        sec_patch_data_list.append(i.get_dic())
-
-    sec_patch_data = {
-        "hosts": hostslist,
-        "data": sec_patch_data_list
-    }
-    r = post(ip + "/api/v1/securityPatches/", json=sec_patch_data)
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] secuirty Patchs data response code: {r.status_code}")
-    if r.status_code != 200:
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-        print(dumps(loads(r.text), indent=4))
-
-    # ------------- sessions-------------#
-
-    session_obj_list = handle_data(get_login_users(), "session", hostid)
-    session_data_list = []
-    for i in session_obj_list:
-        session_data_list.append(i.get_dic())
-
-    session_data = {
-        "hosts": hostslist,
-        "data": session_data_list
-    }
-    r = post(ip + "/api/v1/sessions/", json=session_data)
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] sessions data response code: {r.status_code}")
-    if r.status_code != 200:
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-        print(dumps(loads(r.text), indent=4))
-
-    # ----------installed software------------#
-
-    software_obj_list = handle_data(get_installed_programs(), "software", hostid)
-    software_data_list = []
-    for i in software_obj_list:
-        software_data_list.append(i.get_dic())
-
-    software_data = {
-        "hosts": hostslist,
-        "data": software_data_list
-    }
-    r = post(ip + "/api/v1/installedSoftware/", json=software_data)
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Installed software data response code: {r.status_code}")
-    if r.status_code != 200:
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-        print(dumps(loads(r.text), indent=4))
-
-    # ----------users------------#
-
-    users_obj_list = handle_data(get_users(), "user", hostid)
-    users_data_list = []
-    for i in users_obj_list:
-        users_data_list.append(i.get_dic())
-
-    users_data = {
-        "hosts": hostslist,
-        "data": users_data_list
-    }
-    r = post(ip + "/api/v1/localUsers/", json=users_data)
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Local users data response code: {r.status_code}")
-    if r.status_code != 200:
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-        print(dumps(loads(r.text), indent=4))
-
-    # -------groups members--------#
-
-    groups_members_obj_list = handle_data(get_users_groups(), "user_group", hostid)
-    groups_members_data_list = []
-    for i in groups_members_obj_list:
-        groups_members_data_list.append(i.get_dic())
-
-    groups_members_data = {
-        "hosts": hostslist,
-        "data": groups_members_data_list
-    }
-    r = post(ip + "/api/v1/usersGroups/", json=groups_members_data)
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Local groups members data response code: {r.status_code}")
-    if r.status_code != 200:
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-        print(dumps(loads(r.text), indent=4))
-
-    while True:
-
-        # -------- Application Events---------#
-
-        application_events_data = get_events("Application", bf_time)
-        if len(application_events_data) <= 9:
-            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] No New Application log data to send")
-        else:
-            app_event_obj_list = handle_events(application_events_data, hostid)
-            app_event_data_list = []
-            for i in app_event_obj_list:
-                app_event_data_list.append(i.get_dic())
-            app_events_data = {
+            proc_data = {
                 "hosts": hostslist,
-                "data": app_event_data_list
+                "data": proc_data_list
             }
 
-            r = post(ip + "/api/v1/application/", json=app_events_data)
-            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Application  data response code: {r.status_code}")
-            if r.status_code != 200:
-                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-                print(dumps(loads(r.text), indent=1))
-                print("-----------------------------")
-                print("request sample:")
-                print(dumps(app_event_data_list[1],indent=1))
+            # Remove the old Data
+            delete(ip + "/api/v1/processes/" + hostid)
 
-        # -------- System Events---------#
-
-        system_events_data = get_events("System", bf_time)
-        if len(system_events_data) <= 9:
-            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] No New Application log data to send")
-        else:
-            sys_event_obj_list = handle_events(system_events_data, hostid)
-            sys_event_data_list = []
-            for i in sys_event_obj_list:
-                sys_event_data_list.append(i.get_dic())
-
-            sys_events_data = {
-                "hosts": hostslist,
-                "data": sys_event_data_list
-            }
-
-            r = post(ip + "/api/v1/system/", json=sys_events_data)
-            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] System  data response code: {r.status_code}")
+            # Sending the New Data
+            r = post(ip + "/api/v1/processes/", json=proc_data)
+            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Processes data response code: {r.status_code}")
             if r.status_code != 200:
                 print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
                 print(dumps(loads(r.text), indent=4))
 
-        # -------- Security Events---------#
+            # ------------Services -----------------#
 
-        try:
-            security_events_data = get_events("Security", bf_time)
+            serv_obj_list = handle_data(get_services(), "service", hostid)
+            serv_data_list = []
+            for i in serv_obj_list:
+                serv_data_list.append(i.get_dic())
+
+            serv_data = {
+                "hosts": hostslist,
+                "data": serv_data_list
+            }
+
+            # Removing the old Data
+            delete(ip + "/api/v1/services/" + hostid)
+
+            # sending the new Data
+            r = post(ip + "/api/v1/services/", json=serv_data)
+            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] services data response code: {r.status_code}")
+            if r.status_code != 200:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                print(dumps(loads(r.text), indent=4))
+
+            # ---------- arp cache -----------------#
+
+            arp_obj_list = handle_data(get_ARP(), "arp", hostid)
+            arp_data_list = []
+            for i in arp_obj_list:
+                arp_data_list.append(i.get_dic())
+
+            arp_data = {
+                "hosts": hostslist,
+                "data": arp_data_list
+            }
+
+            # Removing the old data
+            delete(ip + "/api/v1/arp/" + hostid)
+
+            # sending the new Data
+            r = post(ip + "/api/v1/arp/", json=arp_data)
+            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ARP data response code: {r.status_code}")
+            if r.status_code != 200:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                print(dumps(loads(r.text), indent=4))
+
+            # --------------- groups ------------------#
+
+            groups_obj_list = handle_data(get_groups(), "group", hostid)
+            groups_data_list = []
+            for i in groups_obj_list:
+                groups_data_list.append(i.get_dic())
+
+            groups_data = {
+                "hosts": hostslist,
+                "data": groups_data_list
+            }
+
+            delete(ip + "/api/v1/groups/" + hostid)
+
+            r = post(ip + "/api/v1/groups/", json=groups_data)
+            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] groups data response code: {r.status_code}")
+            if r.status_code != 200:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                print(dumps(loads(r.text), indent=4))
+
+            # ---------- interfaces ---------------#
+
+            interface_obj_list = handle_data(get_interfaces(), "interface", hostid)
+            interface_data_list = []
+            for i in interface_obj_list:
+                interface_data_list.append(i.get_dic())
+
+            interface_data = {
+                "hosts": hostslist,
+                "data": interface_data_list
+            }
+
+            delete(ip + "/api/v1/interfaceAddresses/" + hostid)
+
+            r = post(ip + "/api/v1/interfaceAddresses/", json=interface_data)
+            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] interface data response code: {r.status_code}")
+            if r.status_code != 200:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                print(dumps(loads(r.text), indent=4))
+
+            # ---------- net connection ----------#
+
+            port_connection_obj_list = handle_data(get_net_connects(), "port_connection", hostid)
+            port_connection_data_list = []
+            for i in port_connection_obj_list:
+                port_connection_data_list.append(i.get_dic())
+
+            port_connection_data = {
+                "hosts": hostslist,
+                "data": port_connection_data_list
+            }
+
+            delete(ip + "/api/v1/listenPorts/" + hostid)
+
+            r = post(ip + "/api/v1/listenPorts/", json=port_connection_data)
+            print(
+                f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] network connection data response code: {r.status_code}")
+            if r.status_code != 200:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                print(dumps(loads(r.text), indent=4))
+
+            # --------- route table -----------#
+
+            route_obj_list = handle_data(get_net_route(), "route", hostid)
+            route_data_list = []
+            for i in route_obj_list:
+                route_data_list.append(i.get_dic())
+
+            route_data = {
+                "hosts": hostslist,
+                "data": route_data_list
+            }
+
+            delete(ip + "/api/v1/route/" + hostid)
+
+            r = post(ip + "/api/v1/route/", json=route_data)
+            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] local route data response code: {r.status_code}")
+            if r.status_code != 200:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                print(dumps(loads(r.text), indent=4))
+
+            # ----------- Security Patches -------#
+
+            sec_patch_obj_list = handle_data(get_patches(), "security_patch", hostid)
+            sec_patch_data_list = []
+            for i in sec_patch_obj_list:
+                sec_patch_data_list.append(i.get_dic())
+
+            sec_patch_data = {
+                "hosts": hostslist,
+                "data": sec_patch_data_list
+            }
+
+            delete(ip + "/api/v1/securityPatches/" + hostid)
+
+            r = post(ip + "/api/v1/securityPatches/", json=sec_patch_data)
+            print(
+                f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] secuirty Patchs data response code: {r.status_code}")
+            if r.status_code != 200:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                print(dumps(loads(r.text), indent=4))
+
+            # ------------- sessions-------------#
+
+            session_obj_list = handle_data(get_login_users(), "session", hostid)
+            session_data_list = []
+            for i in session_obj_list:
+                session_data_list.append(i.get_dic())
+
+            session_data = {
+                "hosts": hostslist,
+                "data": session_data_list
+            }
+
+            delete(ip + "/api/v1/sessions/" + hostid)
+
+            r = post(ip + "/api/v1/sessions/", json=session_data)
+            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] sessions data response code: {r.status_code}")
+            if r.status_code != 200:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                print(dumps(loads(r.text), indent=4))
+
+            # ----------installed software------------#
+
+            software_obj_list = handle_data(get_installed_programs(), "software", hostid)
+            software_data_list = []
+            for i in software_obj_list:
+                software_data_list.append(i.get_dic())
+
+            software_data = {
+                "hosts": hostslist,
+                "data": software_data_list
+            }
+
+            delete(ip + "/api/v1/installedSoftware/" + hostid)
+
+            r = post(ip + "/api/v1/installedSoftware/", json=software_data)
+            print(
+                f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Installed software data response code: {r.status_code}")
+            if r.status_code != 200:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                print(dumps(loads(r.text), indent=4))
+
+            # ----------users------------#
+
+            users_obj_list = handle_data(get_users(), "user", hostid)
+            users_data_list = []
+            for i in users_obj_list:
+                users_data_list.append(i.get_dic())
+
+            users_data = {
+                "hosts": hostslist,
+                "data": users_data_list
+            }
+
+            delete(ip + "/api/v1/localUsers/" + hostid)
+
+            r = post(ip + "/api/v1/localUsers/", json=users_data)
+            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Local users data response code: {r.status_code}")
+            if r.status_code != 200:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                print(dumps(loads(r.text), indent=4))
+
+            # -------groups members--------#
+
+            groups_members_obj_list = handle_data(get_users_groups(), "user_group", hostid)
+            groups_members_data_list = []
+            for i in groups_members_obj_list:
+                groups_members_data_list.append(i.get_dic())
+
+            groups_members_data = {
+                "hosts": hostslist,
+                "data": groups_members_data_list
+            }
+
+
+            delete(ip + "/api/v1/usersGroups/" + hostid)
+
+            r = post(ip + "/api/v1/usersGroups/", json=groups_members_data)
+            print(
+                f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Local groups members data response code: {r.status_code}")
+            if r.status_code != 200:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                print(dumps(loads(r.text), indent=4))
+
+            # -------- Application Events---------#
+
+            application_events_data = get_events("Application", time)
+            if len(application_events_data) <= 9:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] No New Application log data to send")
+            else:
+                app_event_obj_list = handle_events(application_events_data, hostid)
+                app_event_data_list = []
+                for i in app_event_obj_list:
+                    app_event_data_list.append(i.get_dic())
+                app_events_data = {
+                    "hosts": hostslist,
+                    "data": app_event_data_list
+                }
+
+                #delete(ip + "/api/v1/application/" + hostid)
+
+                r = post(ip + "/api/v1/application/", json=app_events_data)
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Application  data response code: {r.status_code}")
+                if r.status_code != 200:
+                    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                    print(dumps(loads(r.text), indent=1))
+                    print("-----------------------------")
+                    print("request sample:\n\n")
+                    print(dumps(app_event_data_list[1], indent=1))
+
+            # -------- System Events---------#
+
+            system_events_data = get_events("System", time)
+            if len(system_events_data) <= 9:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] No New Application log data to send")
+            else:
+                sys_event_obj_list = handle_events(system_events_data, hostid)
+                sys_event_data_list = []
+                for i in sys_event_obj_list:
+                    sys_event_data_list.append(i.get_dic())
+
+                sys_events_data = {
+                    "hosts": hostslist,
+                    "data": sys_event_data_list
+                }
+
+                #delete(ip + "/api/v1/system/" + hostid)
+
+                r = post(ip + "/api/v1/system/", json=sys_events_data)
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] System  data response code: {r.status_code}")
+                if r.status_code != 200:
+                    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                    print(dumps(loads(r.text), indent=4))
+
+            # -------- Security Events---------#
+
+            security_events_data = get_events("Security", time)
             if len(security_events_data) <= 9:
                 print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] No New Security log data to send")
             else:
@@ -693,45 +734,52 @@ def main():
                 sec_event_data_list = []
                 for i in sec_event_obj_list:
                     sec_event_data_list.append(i.get_dic())
+
                 security_events_data = {
                     "hosts": hostslist,
                     "data": sec_event_data_list
                 }
+
+                #delete(ip + "/api/v1/security/" + hostid)
 
                 r = post(ip + "/api/v1/security/", json=security_events_data)
                 print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Security  data response code: {r.status_code}")
                 if r.status_code != 200:
                     print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
                     print(dumps(loads(r.text), indent=4))
-        except:
-            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR! , No Permission to get the Security Logs, run the client as administrator")
-            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Clossing the client.....")
-            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Cleaning the database....")
-            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Remove the host with ID:{hostid}")
-            r = delete(ip + "/api/v1/hosts/" + hostid)
-        # ---------- sysmon events--------#
 
-        sysmon_obj_list = handle_sysmon(get_sysmon_events(1, bf_time), hostid)
-        sysmon_data_list = []
-        for i in sysmon_obj_list:
-            sysmon_data_list.append(i.get_dic())
+            # ---------- sysmon events--------#
+            sysmon_events_data = get_sysmon_events(1, time)
+            if len(sysmon_events_data) <= 9:
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] No New sysmon log data to send")
+            else:
+                sysmon_obj_list = handle_sysmon(sysmon_events_data, hostid)
+                sysmon_data_list = []
+                for i in sysmon_obj_list:
+                    sysmon_data_list.append(i.get_dic())
 
-        sysmon_data = {
-            "hosts": hostslist,
-            "data": sysmon_data_list
-        }
+                sysmon_data = {
+                    "hosts": hostslist,
+                    "data": sysmon_data_list
+                }
 
-        r = post(ip + "/api/v1/sysmon/", json=sysmon_data)
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] sysmon logs response code: {r.status_code}")
-        if r.status_code != 200:
-            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
-            print(dumps(loads(r.text), indent=4))
-        break
+                r = post(ip + "/api/v1/sysmon/", json=sysmon_data)
+                print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] sysmon logs response code: {r.status_code}")
+                if r.status_code != 200:
+                    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] ERROR!, Response data:")
+                    print(dumps(loads(r.text), indent=4))
 
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Clossing the client.....")
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Cleaning the database....")
-    print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Remove the host with ID:{hostid}")
-    r = delete(ip + "/api/v1/hosts/" + hostid)
+            time = datetime.now()
+            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Sleeping for 5 sec")
+
+    except KeyboardInterrupt:
+        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Clossing the client.....")
+        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Cleaning the database....")
+        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Remove the host with ID:{hostid}")
+        delete(ip + "/api/v1/hosts/" + hostid)
+        exit(0)
+
 
 if __name__ == "__main__":
     main()
+
