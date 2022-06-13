@@ -15,8 +15,9 @@ from modules.user import User
 from modules.user_group import User_group
 from json import dumps, loads
 from subprocess import run, PIPE
-from datetime import datetime
+from datetime import datetime, timedelta
 from requests import post, delete
+from time import sleep
 
 
 def get_proceesses():
@@ -285,9 +286,13 @@ def get_users_groups():
     return str_data
 
 
-def get_sysmon_events(id, aftertime):
-    command = '&{&Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" -MaxEvents 30  |where {$_.timecreated -gt "' + str(
-        aftertime) + '" -and $_.id -eq "' + str(id) + '"}  | select id,message | ConvertTo-Json}'
+def get_sysmon_events(id):
+    time = datetime.now() - timedelta(minutes=5)
+    command = '&{&Get-WinEvent -LogName "Microsoft-Windows-Sysmon/Operational" -MaxEvents 150 |where {$_.timecreated -gt "' + str(
+        time) + '" -and $_.id -eq "' + str(id) + '"  -and $_.message -NotLike "*osquery*"}  | select id,message | ConvertTo-Json}'
+
+    print(f"\n--{command}--\n")
+
     data = run([
         "Powershell.exe",
         "-ExecutionPolicy", "Bypass",
@@ -407,14 +412,14 @@ def handle_data(str_data, data_type, hostid):
 def main():
     time = datetime.now()
 
-    hostid = ""
+    hostid = "62a7b0e20e971df8dc5e1a85"
 
     ip = 'http://192.168.1.7:5000'
 
     hostslist = []
 
     # ----------------- Host Data ----------------------------------#
-
+    #
     host_obj = Host(get_host_info(), get_cpu_info(), get_disk_info(), get_win_sec_center(), get_uptime(), get_os_info())
     r = post(ip + "/api/v1/hosts/", json=host_obj.get_dic())
     print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Host data response code: {r.status_code}")
@@ -749,7 +754,7 @@ def main():
                     print(dumps(loads(r.text), indent=4))
 
             # ---------- sysmon events--------#
-            sysmon_events_data = get_sysmon_events(1, time)
+            sysmon_events_data = get_sysmon_events(1)
             if len(sysmon_events_data) <= 9:
                 print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] No New sysmon log data to send")
             else:
@@ -770,14 +775,16 @@ def main():
                     print(dumps(loads(r.text), indent=4))
 
             time = datetime.now()
-            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Sleeping for 5 sec")
+            print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Sleeping for 10 sec")
+            sleep(10)
 
     except KeyboardInterrupt:
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Clossing the client.....")
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Cleaning the database....")
-        print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Remove the host with ID:{hostid}")
-        delete(ip + "/api/v1/hosts/" + hostid)
-        exit(0)
+        pass
+        # print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Clossing the client.....")
+        # print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Cleaning the database....")
+        # print(f"[{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}] Remove the host with ID:{hostid}")
+        # delete(ip + "/api/v1/hosts/" + hostid)
+        # exit(0)
 
 
 if __name__ == "__main__":
